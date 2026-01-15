@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Etho-Track - Bilan</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234ade80' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3e%3c/svg%3e">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233730a3'%3e%3crect width='24' height='24' rx='5' fill='%233730a3'/%3e%3cpath d='M22 12h-4l-3 9L9 3l-3 9H2' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -231,7 +233,7 @@
         };
 
         const App = () => {
-            const [dogName, setDogName] = useState("Sanka");
+            const [dogName, setDogName] = useState("___");
             const [dogAge, setDogAge] = useState("");
             const [dogBreed, setDogBreed] = useState("");
             const [ownerName, setOwnerName] = useState("");
@@ -248,11 +250,11 @@
             const [formData, setFormData] = useState({
                 date: new Date().toLocaleDateString('fr-FR'),
                 environnement: 'campagne',
-                typeSortie: 'balade',
-                attache: 'laisse',
+                typeSortie: 'travail',
+                attache: 'libre',
                 excitation: 3,
                 aboiement: false,
-                reactionSociale: 'indifference',
+                reactionSociale: 'neutre',
                 tempsRappel: '0-5s',
                 notes: '',
                 timer: 0
@@ -535,7 +537,7 @@
             const calculateStats = () => {
                 if (sessions.length === 0) return null;
                 const avgExcitation = (sessions.reduce((acc, s) => acc + parseInt(s.excitation), 0) / sessions.length).toFixed(1);
-                const focusRate = (sessions.filter(s => s.reactionSociale === 'indifference' || s.reactionSociale === 'distant').length / sessions.length * 100).toFixed(0);
+                const focusRate = (sessions.filter(s => s.reactionSociale === 'focusmaitre' || s.reactionSociale === 'distant' || s.reactionSociale === 'neutre').length / sessions.length * 100).toFixed(0);
                 const barkRate = (sessions.filter(s => s.aboiement).length / sessions.length * 100).toFixed(0);
                 return { avgExcitation, focusRate, barkRate };
             };
@@ -565,7 +567,7 @@
                 text += `\nOBSERVATIONS DÉTAILLÉES :\n`;
 
                 sessionsToAnalyze.forEach((s, i) => {
-                    const iconSocial = (s.reactionSociale === 'indifference' || s.reactionSociale === 'distant') ? '✅' : (s.reactionSociale === 'conflit' ? '🛑' : '⚠️');
+                    const iconSocial = (s.reactionSociale === 'focusmaitre' || s.reactionSociale === 'distant' || s.reactionSociale === 'neutre') ? '✅' : (s.reactionSociale === 'conflit' ? '🛑' : '⚠️');
                     const iconBark = s.aboiement ? ' 🔊 [ABOIEMENT]' : '';
                     const attacheStr = s.attache ? ` | Attache : ${s.attache}` : '';
                     const rappelsStr = s.rappels > 0 ? ` | Rappels : ${s.rappels}` : '';
@@ -704,10 +706,10 @@
                                     <div className="flex flex-col items-center gap-1 w-full border-b border-white/5 pb-4">
                                         <div className="flex items-center gap-2 text-green-400">
                                             <Icons.MapPin />
-                                            <span className="text-sm font-black uppercase tracking-widest truncate max-w-[220px]">{location}</span>
+                                            <span className="text-xl font-black uppercase tracking-widest truncate max-w-[220px]">{location}</span>
                                         </div>
                                         {coords.lat && (
-                                            <div className="flex items-center gap-1 opacity-50 text-[8px] font-mono mt-0.5 tracking-tighter">
+                                            <div className="flex items-center gap-1 opacity-50 text-[18px] font-mono mt-0.5 tracking-tighter">
                                                 <Icons.Target />
                                                 <span>LAT: {coords.lat} | LNG: {coords.lng}</span>
                                             </div>
@@ -918,8 +920,8 @@
                                         <option value="campagne" className="bg-indigo-900">🏞️ Campagne</option>
                                         <option value="ville" className="bg-indigo-900">🏙️ Ville</option>
                                         <option value="foret" className="bg-indigo-900">🌲 Forêt</option>
-                                        <option value="plage" className="bg-indigo-900">🏖️ Plage</option>
                                         <option value="montagne" className="bg-indigo-900">⛰️ Montagne</option>
+                                        <option value="plage" className="bg-indigo-900">🏖️ Plage</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -970,7 +972,8 @@
                                     className="w-full p-5 bg-white/10 border-2 border-white/10 rounded-2xl font-black text-lg glass-text outline-none focus:ring-4 focus:ring-white/5 transition-all appearance-none shadow-sm"
                                     style={{backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.5em'}}
                                 >
-                                    <option value="indifference" className="bg-indigo-900">😐 Focus Maître</option>
+                                    <option value="neutre" className="bg-indigo-900">⚖️ Neutre</option>
+                                    <option value="focusmaitre" className="bg-indigo-900">😐 Focus Maître</option>
                                     <option value="distant" className="bg-indigo-900">🍃 Distant</option>
                                     <option value="vigilance" className="bg-indigo-900">🧐 Vigilance</option>
                                     <option value="tension" className="bg-indigo-900">🐕 Tension laisse</option>
@@ -1146,13 +1149,12 @@
                             >
                                 <Icons.FileText /> GÉNÉRER LE BILAN
                             </button>
-                            <p className="text-[10px] glass-label font-bold uppercase tracking-tight">Analyse automatique des 14 dernières entrées</p>
                             
                             <button 
                                 onClick={handleResetTotal}
                                 className={`mt-4 w-full font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95 border-2 shadow-xl ${confirmReset ? 'bg-red-600 border-red-400 text-white animate-pulse' : 'bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20'}`}
                             >
-                                <Icons.RefreshCw /> {confirmReset ? "CONFIRMER L'EFFACEMENT ?" : "RESET DES SESSIONS"}
+                                <Icons.RotateCcw /> {confirmReset ? "CONFIRMER L'EFFACEMENT ?" : "RESET DES SESSIONS"}
                             </button>
                         </div>
                     </main>
