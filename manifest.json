@@ -1,10 +1,18 @@
 {
-  "short_name": "EthoTrack",
   "name": "Etho-Track Bilan",
-  "start_url": "./index.html",
+  "short_name": "EthoTrack",
+  "description": "Suivi éthologique en temps réel",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#3730a3",
   "theme_color": "#3730a3",
-  "orientation": "portrait"
-
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/822/822143.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
