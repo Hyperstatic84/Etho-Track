@@ -1,9 +1,10 @@
 {
   "short_name": "EthoTrack",
   "name": "Etho-Track Bilan",
-  "start_url": "./etho_track.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#3730a3",
   "theme_color": "#3730a3",
   "orientation": "portrait"
+
 }
