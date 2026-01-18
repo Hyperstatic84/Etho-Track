@@ -223,8 +223,8 @@
             Menu: () => (
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             ),
-            Trash: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Trash: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             ),
             RefreshCw: () => (
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 1 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
@@ -396,6 +396,14 @@
                 localStorage.setItem('etho_track_profiles', JSON.stringify(newProfiles));
             };
 
+            const handleDeleteEntry = (index) => {
+                const newSessions = [...sessions];
+                newSessions.splice(index, 1);
+                setSessions(newSessions);
+                setMessage("SESSION SUPPRIMÉE");
+                setTimeout(() => setMessage(null), 2000);
+            }
+
             const handleResetTotal = () => {
                 if (!confirmReset) {
                     setConfirmReset(true);
@@ -475,51 +483,71 @@
             }, [isTimerRunning]);
 
             const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const img = new Image();
-            img.onload = () => {
-                // Création d'un canvas pour le redimensionnement
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 150;
-                const MAX_HEIGHT = 150;
-                let width = img.width;
-                let height = img.height;
+                const file = e.target.files[0];
+                if (file) {
+                    // Reset de l'input pour permettre la ré-sélection du même fichier si échec
+                    e.target.value = '';
+                    
+                    try {
+                        const img = new Image();
+                        // OPTIMISATION SAMSUNG/ANDROID : 
+                        // Utilisation de createObjectURL au lieu de FileReader pour éviter 
+                        // les crashs mémoire avec les photos haute résolution (108MP+)
+                        const objectUrl = URL.createObjectURL(file);
+                        
+                        img.onload = () => {
+                            // Création d'un canvas pour le redimensionnement
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 200;
+                            const MAX_HEIGHT = 200;
+                            let width = img.width;
+                            let height = img.height;
 
-                // Calcul des proportions pour garder un ratio correct
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
+                            // Calcul des proportions pour garder un ratio correct
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Exportation en format JPEG avec une qualité de 0.7
+                            const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                            
+                            setDogPhoto(optimizedDataUrl);
+                            setShowPhotoMenu(false);
+                            setMessage("PHOTO OPTIMISÉE");
+                            setTimeout(() => setMessage(null), 2000);
+                            
+                            // Libération de la mémoire
+                            URL.revokeObjectURL(objectUrl);
+                        };
+
+                        img.onerror = () => {
+                            setMessage("ERREUR LECTURE IMAGE");
+                            URL.revokeObjectURL(objectUrl);
+                            setTimeout(() => setMessage(null), 3000);
+                        };
+
+                        img.src = objectUrl;
+
+                    } catch (err) {
+                        console.error(err);
+                        setMessage("ERREUR TECHNIQUE");
+                        setTimeout(() => setMessage(null), 3000);
                     }
                 }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Exportation en format JPEG avec une qualité de 0.7 (70%)
-                // Cela réduit considérablement le poids du texte Base64
-                const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                
-                setDogPhoto(optimizedDataUrl);
-                setShowPhotoMenu(false);
-                setMessage("PHOTO OPTIMISÉE");
-                setTimeout(() => setMessage(null), 2000);
             };
-            img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-    }
-};
 
             const handleSaveSession = () => {
                 const sessionToSave = { 
@@ -530,8 +558,29 @@
                     rappels: rappelCount,
                     weather: weather ? `${weather.temp}°C, vent ${weather.wind}km/h` : null
                 };
-                setSessions([sessionToSave, ...sessions]);
-                setMessage("SESSION VALIDÉE !");
+                
+                // Création de la nouvelle liste de sessions
+                const newSessions = [sessionToSave, ...sessions];
+                setSessions(newSessions);
+
+                // --- SAUVEGARDE AUTOMATIQUE DU PROFIL ---
+                const currentProfile = {
+                    id: dogName.toLowerCase().replace(/\s/g, '-') || Date.now().toString(),
+                    name: dogName,
+                    age: dogAge,
+                    breed: dogBreed,
+                    owner: ownerName,
+                    photo: dogPhoto,
+                    sessions: newSessions, // On utilise la liste mise à jour incluant la nouvelle session
+                    lastUpdated: new Date().toISOString()
+                };
+
+                const newProfiles = [...savedProfiles.filter(p => p.id !== currentProfile.id), currentProfile];
+                setSavedProfiles(newProfiles);
+                localStorage.setItem('etho_track_profiles', JSON.stringify(newProfiles));
+                // ----------------------------------------
+
+                setMessage("SESSION SAUVEGARDÉE !");
                 setTimeout(() => setMessage(null), 3000);
                 setFormData({ ...formData, notes: '', aboiement: false, date: new Date().toLocaleDateString('fr-FR') });
                 setIsTimerRunning(false);
@@ -866,7 +915,7 @@
                                         </button>
                                     </div>
                                 )}
-                                <input type="file" ref={cameraInputRef} onChange={handlePhotoUpload} accept="image/*" capture="user" className="hidden" />
+                                <input type="file" ref={cameraInputRef} onChange={handlePhotoUpload} accept="image/*" capture="environment" className="hidden" />
                                 <input type="file" ref={galleryInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
                             </div>
                             
@@ -1138,8 +1187,17 @@
                                                 </p>
                                                 {s.coords && <p className="text-[8px] font-mono opacity-40 uppercase">{s.coords}</p>}
                                             </div>
-                                            <div className="bg-white/20 px-4 py-2 rounded-2xl glass-text font-black text-sm shadow-sm">
-                                                {s.excitation}/5
+                                            <div className="flex items-center gap-3">
+                                                <button 
+                                                    onClick={() => handleDeleteEntry(i)} 
+                                                    className="w-10 h-10 bg-red-500/20 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500/40 transition-colors active:scale-90" 
+                                                    aria-label="Supprimer"
+                                                >
+                                                    <Icons.Trash width={20} height={20} />
+                                                </button>
+                                                <div className="bg-white/20 px-4 py-2 rounded-2xl glass-text font-black text-sm shadow-sm">
+                                                    {s.excitation}/5
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -1172,5 +1230,3 @@
     </script>
 </body>
 </html>
-
-
